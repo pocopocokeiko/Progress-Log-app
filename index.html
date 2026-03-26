@@ -1466,6 +1466,20 @@ input:focus, select:focus {
       <input type="text" id="mypageDisplayName" placeholder="名前を入力...">
     </div>
     <div class="mypage-info" id="mypageEmail"></div>
+    <div class="mypage-field" id="mypageLinkSection">
+      <label id="mypageLinkLabel">アカウント連携</label>
+      <div id="mypageLinkStatus" style="font-size:0.8rem;color:#999;margin-bottom:8px;"></div>
+      <div id="mypageLinkButtons" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      <div id="mypageLinkEmail" style="display:none;margin-top:8px;">
+        <input type="email" id="linkEmail" placeholder="メールアドレス" style="margin-bottom:6px;">
+        <input type="password" id="linkPassword" placeholder="パスワード（6文字以上）" style="margin-bottom:6px;">
+        <div style="display:flex;gap:8px;">
+          <button class="mypage-btn-save" onclick="linkEmailPassword()" style="font-size:0.8rem;padding:6px 16px;">連携する</button>
+          <button class="mypage-btn-cancel" onclick="document.getElementById('mypageLinkEmail').style.display='none'" style="font-size:0.8rem;padding:6px 16px;">やめる</button>
+        </div>
+      </div>
+      <div id="mypageLinkError" style="color:#c48888;font-size:0.8rem;margin-top:6px;"></div>
+    </div>
     <div class="mypage-buttons">
       <button class="mypage-btn-cancel" onclick="closeMyPage()">キャンセル</button>
       <button class="mypage-btn-save" onclick="saveMyPage()">保存</button>
@@ -2230,7 +2244,87 @@ function updateTitle() {
 function openMyPage() {
   document.getElementById('mypageDisplayName').value = userProfile.displayName || '';
   document.getElementById('mypageEmail').textContent = currentUser ? currentUser.email : '';
+  document.getElementById('mypageLinkEmail').style.display = 'none';
+  document.getElementById('mypageLinkError').textContent = '';
+  updateLinkStatus();
   document.getElementById('mypageOverlay').classList.add('active');
+}
+
+function updateLinkStatus() {
+  if (!currentUser) return;
+  const providers = currentUser.providerData.map(p => p.providerId);
+  const hasGoogle = providers.includes('google.com');
+  const hasEmail = providers.includes('password');
+
+  const statusEl = document.getElementById('mypageLinkStatus');
+  const buttonsEl = document.getElementById('mypageLinkButtons');
+
+  let statusText = '';
+  if (hasGoogle && hasEmail) {
+    statusText = currentLang === 'ja' ? 'Google・メール両方連携済み' : 'Linked: Google & Email';
+  } else if (hasGoogle) {
+    statusText = currentLang === 'ja' ? 'Google連携済み' : 'Linked: Google';
+  } else if (hasEmail) {
+    statusText = currentLang === 'ja' ? 'メール/パスワード連携済み' : 'Linked: Email/Password';
+  }
+  statusEl.textContent = statusText;
+
+  let btns = '';
+  if (!hasGoogle) {
+    const label = currentLang === 'ja' ? 'Googleを連携' : 'Link Google';
+    btns += `<button class="mypage-btn-save" onclick="linkGoogle()" style="font-size:0.8rem;padding:6px 16px;">${label}</button>`;
+  }
+  if (!hasEmail) {
+    const label = currentLang === 'ja' ? 'メール/パスワードを連携' : 'Link Email/Password';
+    btns += `<button class="mypage-btn-save" onclick="showLinkEmailForm()" style="font-size:0.8rem;padding:6px 16px;">${label}</button>`;
+  }
+  buttonsEl.innerHTML = btns;
+}
+
+function showLinkEmailForm() {
+  document.getElementById('mypageLinkEmail').style.display = 'block';
+  document.getElementById('linkEmail').value = '';
+  document.getElementById('linkPassword').value = '';
+}
+
+async function linkGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await currentUser.linkWithPopup(provider);
+    document.getElementById('mypageLinkError').textContent = '';
+    updateLinkStatus();
+  } catch (err) {
+    console.error('Link Google error:', err);
+    const msg = err.code === 'auth/credential-already-in-use'
+      ? (currentLang === 'ja' ? 'このGoogleアカウントは既に別のユーザーに紐づいています' : 'This Google account is already linked to another user')
+      : (currentLang === 'ja' ? '連携に失敗しました' : 'Linking failed');
+    document.getElementById('mypageLinkError').textContent = msg;
+  }
+}
+
+async function linkEmailPassword() {
+  const email = document.getElementById('linkEmail').value.trim();
+  const password = document.getElementById('linkPassword').value;
+  const errorEl = document.getElementById('mypageLinkError');
+
+  if (!email) { errorEl.textContent = currentLang === 'ja' ? 'メールアドレスを入力してください' : 'Enter email'; return; }
+  if (!password || password.length < 6) { errorEl.textContent = currentLang === 'ja' ? 'パスワードは6文字以上にしてください' : 'Password must be 6+ characters'; return; }
+
+  try {
+    const credential = firebase.auth.EmailAuthProvider.credential(email, password);
+    await currentUser.linkWithCredential(credential);
+    errorEl.textContent = '';
+    document.getElementById('mypageLinkEmail').style.display = 'none';
+    updateLinkStatus();
+  } catch (err) {
+    console.error('Link email error:', err);
+    const msg = err.code === 'auth/email-already-in-use'
+      ? (currentLang === 'ja' ? 'このメールアドレスは既に使用されています' : 'Email already in use')
+      : err.code === 'auth/invalid-email'
+      ? (currentLang === 'ja' ? 'メールアドレスの形式が正しくありません' : 'Invalid email format')
+      : (currentLang === 'ja' ? '連携に失敗しました' : 'Linking failed');
+    errorEl.textContent = msg;
+  }
 }
 
 function closeMyPage() {
