@@ -2309,15 +2309,14 @@ function updateLinkStatus() {
   const statusEl = document.getElementById('mypageLinkStatus');
   const buttonsEl = document.getElementById('mypageLinkButtons');
 
-  let statusText = '';
-  if (hasGoogle && hasEmail) {
-    statusText = currentLang === 'ja' ? 'Google・メール両方連携済み' : 'Linked: Google & Email';
-  } else if (hasGoogle) {
-    statusText = currentLang === 'ja' ? 'Google連携済み' : 'Linked: Google';
-  } else if (hasEmail) {
-    statusText = currentLang === 'ja' ? 'メール/パスワード連携済み' : 'Linked: Email/Password';
+  let lines = [];
+  if (hasGoogle) {
+    lines.push(currentLang === 'ja' ? '✅ Google連携済み' : '✅ Google linked');
   }
-  statusEl.textContent = statusText;
+  if (hasEmail) {
+    lines.push(currentLang === 'ja' ? '✅ メール/パスワード連携済み' : '✅ Email/Password linked');
+  }
+  statusEl.innerHTML = lines.join('<br>');
 
   let btns = '';
   if (!hasGoogle) {
