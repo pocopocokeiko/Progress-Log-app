@@ -98,6 +98,35 @@ h1 {
   height: 20px;
 }
 
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bbb;
+  font-size: 1rem;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle:hover {
+  color: #888;
+}
+
 .login-divider {
   display: flex;
   align-items: center;
@@ -1334,7 +1363,12 @@ input:focus, select:focus {
   </div>
   <div class="email-login-form">
     <input type="email" id="loginEmail" placeholder="メールアドレス" autocomplete="email">
-    <input type="password" id="loginPassword" placeholder="パスワード" autocomplete="current-password">
+    <div class="password-wrapper">
+      <input type="password" id="loginPassword" placeholder="パスワード" autocomplete="current-password">
+      <button type="button" class="password-toggle" onclick="togglePasswordVisibility('loginPassword', this)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
     <div class="email-login-error" id="emailLoginError"></div>
     <div class="email-login-buttons">
       <button class="btn-email-login" onclick="emailLogin()">ログイン</button>
@@ -1472,7 +1506,12 @@ input:focus, select:focus {
       <div id="mypageLinkButtons" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
       <div id="mypageLinkEmail" style="display:none;margin-top:8px;">
         <input type="email" id="linkEmail" placeholder="メールアドレス" style="margin-bottom:6px;">
-        <input type="password" id="linkPassword" placeholder="パスワード（6文字以上）" style="margin-bottom:6px;">
+        <div class="password-wrapper" style="margin-bottom:6px;">
+          <input type="password" id="linkPassword" placeholder="パスワード（6文字以上）">
+          <button type="button" class="password-toggle" onclick="togglePasswordVisibility('linkPassword', this)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
         <div style="display:flex;gap:8px;">
           <button class="mypage-btn-save" onclick="linkEmailPassword()" style="font-size:0.8rem;padding:6px 16px;">連携する</button>
           <button class="mypage-btn-cancel" onclick="document.getElementById('mypageLinkEmail').style.display='none'" style="font-size:0.8rem;padding:6px 16px;">やめる</button>
@@ -2005,6 +2044,17 @@ function updateStaticText() {
 // ============================================================
 // Authentication
 // ============================================================
+
+function togglePasswordVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+  } else {
+    input.type = 'password';
+    btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+}
 
 function googleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
