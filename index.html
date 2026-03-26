@@ -1857,6 +1857,11 @@ function updateStaticText() {
 function googleLogin() {
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+    // iOS standalone mode (home screen app) doesn't support popups
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      return auth.signInWithRedirect(provider);
+    }
     return auth.signInWithPopup(provider);
   }).catch(err => {
     console.error('Login error:', err);
