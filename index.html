@@ -98,6 +98,94 @@ h1 {
   height: 20px;
 }
 
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.login-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #e0dff0;
+}
+
+.login-divider-text {
+  color: #bbb;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.email-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.email-login-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e0dff0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #4a4a4a;
+  outline: none;
+  transition: border 0.2s;
+  background: #fff;
+}
+
+.email-login-form input:focus {
+  border-color: #c48888;
+}
+
+.email-login-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-email-login,
+.btn-email-register {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.btn-email-login {
+  background: #c48888;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(196, 136, 136, 0.3);
+}
+
+.btn-email-login:hover {
+  background: #b07070;
+  box-shadow: 0 4px 12px rgba(176, 112, 112, 0.4);
+}
+
+.btn-email-register {
+  background: #f0eef5;
+  color: #7c6f9c;
+}
+
+.btn-email-register:hover {
+  background: #e4e0f0;
+}
+
+.email-login-error {
+  color: #c44;
+  font-size: 0.8rem;
+  text-align: center;
+  min-height: 1.2em;
+}
+
 .login-note {
   color: #ccc;
   font-size: 0.75rem;
@@ -1239,7 +1327,21 @@ input:focus, select:focus {
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
     Google でログイン
   </button>
-  <div class="login-note">Googleアカウントでログインすると、データがクラウドに保存され、複数デバイスで同期できます。</div>
+  <div class="login-divider">
+    <div class="login-divider-line"></div>
+    <span class="login-divider-text">または</span>
+    <div class="login-divider-line"></div>
+  </div>
+  <div class="email-login-form">
+    <input type="email" id="loginEmail" placeholder="メールアドレス" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="パスワード" autocomplete="current-password">
+    <div class="email-login-error" id="emailLoginError"></div>
+    <div class="email-login-buttons">
+      <button class="btn-email-login" onclick="emailLogin()">ログイン</button>
+      <button class="btn-email-register" onclick="emailRegister()">新規登録</button>
+    </div>
+  </div>
+  <div class="login-note">Googleアカウントまたはメールアドレスでログインすると、データがクラウドに保存され、複数デバイスで同期できます。</div>
 </div>
 
 <!-- App Content (hidden until logged in) -->
@@ -1413,8 +1515,21 @@ const TRANSLATIONS = {
     loginTitle: 'Daily Task Tracker',
     loginSubtitle: '1日のタスクと時間を記録・振り返り',
     loginButton: 'Google でログイン',
-    loginNote: 'Googleアカウントでログインすると、データがクラウドに保存され、複数デバイスで同期できます。',
+    loginDivider: 'または',
+    loginEmailPlaceholder: 'メールアドレス',
+    loginPasswordPlaceholder: 'パスワード',
+    loginEmailButton: 'ログイン',
+    loginRegisterButton: '新規登録',
+    loginNote: 'Googleアカウントまたはメールアドレスでログインすると、データがクラウドに保存され、複数デバイスで同期できます。',
     loginFailed: 'ログインに失敗しました。もう一度お試しください。',
+    errorWrongPassword: 'パスワードが間違っています',
+    errorUserNotFound: 'アカウントが見つかりません。新規登録してください',
+    errorEmailInUse: 'このメールアドレスは既に使用されています',
+    errorWeakPassword: 'パスワードは6文字以上にしてください',
+    errorInvalidEmail: 'メールアドレスの形式が正しくありません',
+    errorEnterEmail: 'メールアドレスを入力してください',
+    errorEnterPassword: 'パスワードを入力してください',
+    registerSuccess: 'アカウントを作成しました',
 
     // Logout bar
     logout: 'ログアウト',
@@ -1574,8 +1689,21 @@ const TRANSLATIONS = {
     loginTitle: 'Daily Task Tracker',
     loginSubtitle: 'Track and review your daily tasks and time',
     loginButton: 'Sign in with Google',
-    loginNote: 'Sign in with Google to save your data to the cloud and sync across devices.',
+    loginDivider: 'or',
+    loginEmailPlaceholder: 'Email address',
+    loginPasswordPlaceholder: 'Password',
+    loginEmailButton: 'Sign in',
+    loginRegisterButton: 'Sign up',
+    loginNote: 'Sign in with Google or email to save your data to the cloud and sync across devices.',
     loginFailed: 'Login failed. Please try again.',
+    errorWrongPassword: 'Incorrect password',
+    errorUserNotFound: 'Account not found. Please sign up',
+    errorEmailInUse: 'This email is already in use',
+    errorWeakPassword: 'Password must be at least 6 characters',
+    errorInvalidEmail: 'Invalid email format',
+    errorEnterEmail: 'Please enter your email',
+    errorEnterPassword: 'Please enter your password',
+    registerSuccess: 'Account created',
 
     // Logout bar
     logout: 'Logout',
@@ -1780,6 +1908,16 @@ function updateStaticText() {
   }
   const loginNote = document.querySelector('.login-note');
   if (loginNote) loginNote.textContent = t('loginNote');
+  const loginDivider = document.querySelector('.login-divider-text');
+  if (loginDivider) loginDivider.textContent = t('loginDivider');
+  const loginEmailInput = document.getElementById('loginEmail');
+  if (loginEmailInput) loginEmailInput.placeholder = t('loginEmailPlaceholder');
+  const loginPasswordInput = document.getElementById('loginPassword');
+  if (loginPasswordInput) loginPasswordInput.placeholder = t('loginPasswordPlaceholder');
+  const emailLoginBtn = document.querySelector('.btn-email-login');
+  if (emailLoginBtn) emailLoginBtn.textContent = t('loginEmailButton');
+  const emailRegBtn = document.querySelector('.btn-email-register');
+  if (emailRegBtn) emailRegBtn.textContent = t('loginRegisterButton');
 
   // Logout bar buttons
   const logoutBtn = document.querySelector('.btn-logout');
@@ -1867,6 +2005,68 @@ function googleLogin() {
     console.error('Login error:', err);
     alert(t('loginFailed'));
   });
+}
+
+// ============================================================
+// Email/Password Authentication
+// NOTE: Email/Password sign-in provider must be enabled in
+// Firebase Console → Authentication → Sign-in method
+// ============================================================
+
+function getEmailAuthErrorMessage(errorCode) {
+  switch (errorCode) {
+    case 'auth/wrong-password':
+    case 'auth/invalid-credential':
+      return t('errorWrongPassword');
+    case 'auth/user-not-found':
+      return t('errorUserNotFound');
+    case 'auth/email-already-in-use':
+      return t('errorEmailInUse');
+    case 'auth/weak-password':
+      return t('errorWeakPassword');
+    case 'auth/invalid-email':
+      return t('errorInvalidEmail');
+    default:
+      return t('loginFailed');
+  }
+}
+
+function showEmailError(msg) {
+  const el = document.getElementById('emailLoginError');
+  if (el) el.textContent = msg;
+}
+
+function clearEmailError() {
+  const el = document.getElementById('emailLoginError');
+  if (el) el.textContent = '';
+}
+
+function emailLogin() {
+  clearEmailError();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email) { showEmailError(t('errorEnterEmail')); return; }
+  if (!password) { showEmailError(t('errorEnterPassword')); return; }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => {
+      console.error('Email login error:', err);
+      showEmailError(getEmailAuthErrorMessage(err.code));
+    });
+}
+
+function emailRegister() {
+  clearEmailError();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email) { showEmailError(t('errorEnterEmail')); return; }
+  if (!password) { showEmailError(t('errorEnterPassword')); return; }
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .catch(err => {
+      console.error('Email register error:', err);
+      showEmailError(getEmailAuthErrorMessage(err.code));
+    });
 }
 
 function logout() {
