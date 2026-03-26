@@ -1374,6 +1374,7 @@ input:focus, select:focus {
       <button class="btn-email-login" onclick="emailLogin()">ログイン</button>
       <button class="btn-email-register" onclick="emailRegister()">新規登録</button>
     </div>
+    <button onclick="resetPassword()" style="background:none;border:none;color:#c48888;font-size:0.8rem;cursor:pointer;margin-top:8px;">パスワードを忘れた方はこちら</button>
   </div>
   <div class="login-note">Googleアカウントまたはメールアドレスでログインすると、データがクラウドに保存され、複数デバイスで同期できます。</div>
 </div>
@@ -2044,6 +2045,20 @@ function updateStaticText() {
 // ============================================================
 // Authentication
 // ============================================================
+
+function resetPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    showEmailError(currentLang === 'ja' ? 'メールアドレスを入力してからクリックしてください' : 'Enter your email first');
+    return;
+  }
+  auth.sendPasswordResetEmail(email).then(() => {
+    showEmailError(currentLang === 'ja' ? 'パスワードリセットメールを送信しました。メールを確認してください' : 'Password reset email sent. Check your inbox');
+  }).catch(err => {
+    console.error('Password reset error:', err);
+    showEmailError(currentLang === 'ja' ? 'メール送信に失敗しました。メールアドレスを確認してください' : 'Failed to send. Check your email address');
+  });
+}
 
 function togglePasswordVisibility(inputId, btn) {
   const input = document.getElementById(inputId);
