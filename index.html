@@ -48,6 +48,106 @@ h1 {
   margin-bottom: 24px;
 }
 
+/* Login Screen */
+.login-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 24px;
+}
+
+.login-screen h1 {
+  font-size: 2rem;
+  margin-bottom: 0;
+}
+
+.login-subtitle {
+  color: #a0a0a0;
+  font-size: 0.95rem;
+}
+
+.btn-google-login {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 32px;
+  background: #c48888;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(196, 136, 136, 0.3);
+}
+
+.btn-google-login:hover {
+  background: #b07070;
+  box-shadow: 0 4px 12px rgba(176, 112, 112, 0.4);
+}
+
+.btn-google-login svg {
+  width: 20px;
+  height: 20px;
+}
+
+.login-note {
+  color: #ccc;
+  font-size: 0.75rem;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* Logout Button */
+.logout-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.user-email {
+  font-size: 0.75rem;
+  color: #bbb;
+}
+
+.btn-logout {
+  padding: 5px 14px;
+  background: #eee;
+  color: #888;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-logout:hover {
+  background: #ddd;
+  color: #666;
+}
+
+/* Sync indicator */
+.sync-indicator {
+  font-size: 0.7rem;
+  color: #bbb;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sync-indicator.syncing {
+  color: #c48888;
+}
+
+.sync-indicator.error {
+  color: #e07070;
+}
+
 /* Date Navigation */
 .date-nav {
   display: flex;
@@ -993,7 +1093,26 @@ input:focus, select:focus {
 </head>
 <body>
 
-<div class="container">
+<!-- Login Screen -->
+<div id="loginScreen" class="login-screen" style="display:none;">
+  <h1>Daily Task Tracker</h1>
+  <div class="login-subtitle">1日のタスクと時間を記録・振り返り</div>
+  <button class="btn-google-login" onclick="googleLogin()">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#fff"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#fff"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#fff"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#fff"/></svg>
+    Google でログイン
+  </button>
+  <div class="login-note">Googleアカウントでログインすると、データがクラウドに保存され、複数デバイスで同期できます。</div>
+</div>
+
+<!-- App Content (hidden until logged in) -->
+<div id="appContent" class="container" style="display:none;">
+
+  <div class="logout-bar">
+    <span class="sync-indicator" id="syncIndicator"></span>
+    <span class="user-email" id="userEmail"></span>
+    <button class="btn-logout" onclick="logout()">ログアウト</button>
+  </div>
+
   <h1>Daily Task Tracker</h1>
   <div class="date-display" id="dateDisplay"></div>
 
@@ -1097,27 +1216,284 @@ input:focus, select:focus {
 <div id="colorPickerContainer"></div>
 <div id="goalModalContainer"></div>
 
+<!-- Firebase SDK (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
 <script>
+// ============================================================
+// Firebase Setup
+// ============================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4GpFMmiy7LGTNaCLQqSt6rkhtv9iwsps",
+  authDomain: "daily-task-tracker-e7a53.firebaseapp.com",
+  projectId: "daily-task-tracker-e7a53",
+  storageBucket: "daily-task-tracker-e7a53.firebasestorage.app",
+  messagingSenderId: "1096984778840",
+  appId: "1:1096984778840:web:fd967d26502ff2185f122d",
+  measurementId: "G-FE7M98VPHW"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Enable offline persistence
+db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+  console.warn('Firestore persistence error:', err.code);
+});
+
+let currentUser = null;
+
+// ============================================================
+// Authentication
+// ============================================================
+
+function googleLogin() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error('Login error:', err);
+    alert('ログインに失敗しました。もう一度お試しください。');
+  });
+}
+
+function logout() {
+  auth.signOut().catch(err => {
+    console.error('Logout error:', err);
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appContent').style.display = 'block';
+    document.getElementById('userEmail').textContent = user.email || '';
+    initApp();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appContent').style.display = 'none';
+    document.getElementById('userEmail').textContent = '';
+  }
+});
+
+// ============================================================
+// Sync Indicator
+// ============================================================
+
+function setSyncStatus(status) {
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  if (status === 'syncing') {
+    el.textContent = '同期中...';
+    el.className = 'sync-indicator syncing';
+  } else if (status === 'done') {
+    el.textContent = '同期完了';
+    el.className = 'sync-indicator';
+    setTimeout(() => { if (el.textContent === '同期完了') el.textContent = ''; }, 2000);
+  } else if (status === 'error') {
+    el.textContent = '同期エラー';
+    el.className = 'sync-indicator error';
+  } else {
+    el.textContent = '';
+    el.className = 'sync-indicator';
+  }
+}
+
+// ============================================================
+// Firestore Read/Write
+// ============================================================
+
+function userDocRef(path) {
+  if (!currentUser) return null;
+  return db.collection('users').doc(currentUser.uid).collection(path.split('/')[0]).doc(path.split('/').slice(1).join('/'));
+}
+
+async function saveDayToFirestore(dateKey, dayData) {
+  if (!currentUser) return;
+  try {
+    setSyncStatus('syncing');
+    await db.collection('users').doc(currentUser.uid)
+      .collection('days').doc(dateKey)
+      .set(dayData);
+    setSyncStatus('done');
+  } catch (err) {
+    console.error('Firestore save error:', err);
+    setSyncStatus('error');
+  }
+}
+
+async function loadDayFromFirestore(dateKey) {
+  if (!currentUser) return null;
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid)
+      .collection('days').doc(dateKey).get();
+    if (doc.exists) return doc.data();
+    return null;
+  } catch (err) {
+    console.error('Firestore load error:', err);
+    return null;
+  }
+}
+
+async function loadAllDaysFromFirestore() {
+  if (!currentUser) return null;
+  try {
+    setSyncStatus('syncing');
+    const snapshot = await db.collection('users').doc(currentUser.uid)
+      .collection('days').get();
+    const days = {};
+    snapshot.forEach(doc => {
+      days[doc.id] = doc.data();
+    });
+    setSyncStatus('done');
+    return days;
+  } catch (err) {
+    console.error('Firestore loadAll error:', err);
+    setSyncStatus('error');
+    return null;
+  }
+}
+
+async function saveGoalsToFirestore(goalsData) {
+  if (!currentUser) return;
+  try {
+    await db.collection('users').doc(currentUser.uid)
+      .collection('settings').doc('goals')
+      .set(goalsData);
+  } catch (err) {
+    console.error('Firestore goals save error:', err);
+  }
+}
+
+async function loadGoalsFromFirestore() {
+  if (!currentUser) return null;
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid)
+      .collection('settings').doc('goals').get();
+    if (doc.exists) return doc.data();
+    return null;
+  } catch (err) {
+    console.error('Firestore goals load error:', err);
+    return null;
+  }
+}
+
+async function saveProjectColorsToFirestore(colors) {
+  if (!currentUser) return;
+  try {
+    await db.collection('users').doc(currentUser.uid)
+      .collection('settings').doc('projectColors')
+      .set(colors);
+  } catch (err) {
+    console.error('Firestore projectColors save error:', err);
+  }
+}
+
+async function loadProjectColorsFromFirestore() {
+  if (!currentUser) return null;
+  try {
+    const doc = await db.collection('users').doc(currentUser.uid)
+      .collection('settings').doc('projectColors').get();
+    if (doc.exists) return doc.data();
+    return null;
+  } catch (err) {
+    console.error('Firestore projectColors load error:', err);
+    return null;
+  }
+}
+
+// ============================================================
+// App State & Constants
+// ============================================================
+
 const COLORS = ['#c4b8e0','#b8d4c4','#d4b8c4','#b8c8d4','#d4ccb8','#b8d4d4','#d4b8b8','#c4d4b8'];
 const STORAGE_KEY = 'daily-task-tracker';
 const GOALS_KEY = 'daily-task-tracker-goals';
 
-// Current viewing date
 let viewingDate = todayKey();
-
-// Load all data (new multi-day format)
-let allData = loadAllData();
-let data = getDayData(viewingDate);
-
-// Goals
-let goals = loadGoals();
+let allData = { days: {} };
+let data = { projects: [], tasks: [], projectColors: {} };
+let goals = { study: 0, dev: 0 };
 
 // Timer state
-let timerState = 'idle'; // idle, running, result
+let timerState = 'idle';
 let timerProject = '';
 let timerStart = null;
 let timerInterval = null;
 let timerElapsed = 0;
+
+// ============================================================
+// App Initialization (called after login)
+// ============================================================
+
+async function initApp() {
+  // Load from localStorage first (instant display)
+  allData = loadAllDataFromLocal();
+  goals = loadGoalsFromLocal();
+
+  // Then load from Firestore and merge
+  const firestoreDays = await loadAllDaysFromFirestore();
+  if (firestoreDays) {
+    // Merge: Firestore data takes priority, but keep local-only days
+    Object.keys(firestoreDays).forEach(dateKey => {
+      allData.days[dateKey] = firestoreDays[dateKey];
+    });
+    // Save merged data back to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+  } else {
+    // Firestore empty or offline: upload local data to Firestore
+    for (const dateKey of Object.keys(allData.days)) {
+      await saveDayToFirestore(dateKey, allData.days[dateKey]);
+    }
+  }
+
+  const firestoreGoals = await loadGoalsFromFirestore();
+  if (firestoreGoals) {
+    goals = firestoreGoals;
+    localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  } else if (goals.study || goals.dev) {
+    await saveGoalsToFirestore(goals);
+  }
+
+  data = getDayData(viewingDate);
+  render();
+  renderTimer();
+}
+
+// ============================================================
+// LocalStorage (fallback/cache)
+// ============================================================
+
+function loadAllDataFromLocal() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return { days: {} };
+  const parsed = JSON.parse(saved);
+  // Migrate old format
+  if (parsed.date && parsed.projects && !parsed.days) {
+    const migrated = { days: {} };
+    migrated.days[parsed.date] = {
+      projects: parsed.projects,
+      tasks: parsed.tasks,
+      projectColors: parsed.projectColors || {}
+    };
+    return migrated;
+  }
+  if (!parsed.days) return { days: {} };
+  return parsed;
+}
+
+function loadGoalsFromLocal() {
+  const saved = localStorage.getItem(GOALS_KEY);
+  if (saved) return JSON.parse(saved);
+  return { study: 0, dev: 0 };
+}
+
+// ============================================================
+// Core Functions
+// ============================================================
 
 function todayKey() {
   const d = new Date();
@@ -1145,24 +1521,6 @@ function isToday() {
   return viewingDate === todayKey();
 }
 
-function loadAllData() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return { days: {} };
-  const parsed = JSON.parse(saved);
-  // Migrate old format (flat with date, projects, tasks, projectColors)
-  if (parsed.date && parsed.projects && !parsed.days) {
-    const migrated = { days: {} };
-    migrated.days[parsed.date] = {
-      projects: parsed.projects,
-      tasks: parsed.tasks,
-      projectColors: parsed.projectColors || {}
-    };
-    return migrated;
-  }
-  if (!parsed.days) return { days: {} };
-  return parsed;
-}
-
 function getDayData(dateKey) {
   if (!allData.days[dateKey]) {
     allData.days[dateKey] = { projects: [], tasks: [], projectColors: {} };
@@ -1173,31 +1531,47 @@ function getDayData(dateKey) {
 
 function saveData() {
   allData.days[viewingDate] = data;
+  // Save to localStorage (cache)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-}
-
-function loadGoals() {
-  const saved = localStorage.getItem(GOALS_KEY);
-  if (saved) return JSON.parse(saved);
-  return { study: 0, dev: 0 };
+  // Save to Firestore (async, non-blocking)
+  saveDayToFirestore(viewingDate, data);
 }
 
 function saveGoals() {
   localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  saveGoalsToFirestore(goals);
 }
 
 // Date navigation
-function navigateDay(offset) {
+async function navigateDay(offset) {
   const newDate = addDays(viewingDate, offset);
   if (newDate > todayKey()) return;
   viewingDate = newDate;
+
+  // Try loading from Firestore if not in local cache
+  if (!allData.days[viewingDate] || (allData.days[viewingDate].tasks && allData.days[viewingDate].tasks.length === 0)) {
+    const firestoreDay = await loadDayFromFirestore(viewingDate);
+    if (firestoreDay) {
+      allData.days[viewingDate] = firestoreDay;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    }
+  }
+
   data = getDayData(viewingDate);
   render();
   if (isToday() && timerState === 'idle') renderTimer();
 }
 
-function goToToday() {
+async function goToToday() {
   viewingDate = todayKey();
+
+  // Refresh today's data from Firestore
+  const firestoreDay = await loadDayFromFirestore(viewingDate);
+  if (firestoreDay) {
+    allData.days[viewingDate] = firestoreDay;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+  }
+
   data = getDayData(viewingDate);
   render();
   if (timerState === 'idle') renderTimer();
@@ -1320,6 +1694,10 @@ function saveTimerTask(mins) {
   allData.days[todayKey()] = todayData;
   if (isToday()) data = todayData;
   saveData();
+  // Also save today's data specifically if viewing a different day
+  if (!isToday()) {
+    saveDayToFirestore(todayKey(), todayData);
+  }
   resetTimer();
   render();
 }
@@ -1525,13 +1903,13 @@ function renderAiSummary() {
   const taskCount = data.tasks.length;
   const avgTime = Math.round(totalMinutes / taskCount);
 
-  const isToday = viewingDate === todayKey();
+  const isTodayView = viewingDate === todayKey();
   const comments = [];
 
   // Greeting
   const hour = new Date().getHours();
   let greeting = '';
-  if (isToday) {
+  if (isTodayView) {
     if (hour < 12) greeting = 'おはよう！今日もお疲れさま。';
     else if (hour < 18) greeting = 'お疲れさま！午後も頑張ってるね。';
     else greeting = 'お疲れさま！今日の振り返りだよ。';
@@ -2027,14 +2405,25 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Enter key support
-document.getElementById('newProject').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addProject(); });
-document.getElementById('taskName').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
-document.getElementById('taskHours').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
-document.getElementById('taskMinutes').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
+// Enter key support (deferred until DOM is ready in app)
+function setupKeyListeners() {
+  document.getElementById('newProject').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addProject(); });
+  document.getElementById('taskName').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
+  document.getElementById('taskHours').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
+  document.getElementById('taskMinutes').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) addTask(); });
+}
 
-render();
-renderTimer();
+// Setup key listeners once app content is visible
+const keyListenerObserver = new MutationObserver(() => {
+  if (document.getElementById('appContent').style.display !== 'none') {
+    setupKeyListeners();
+    keyListenerObserver.disconnect();
+  }
+});
+keyListenerObserver.observe(document.getElementById('appContent'), { attributes: true, attributeFilter: ['style'] });
+
+// Show login screen immediately (auth state listener will handle the rest)
+document.getElementById('loginScreen').style.display = 'flex';
 </script>
 
 </body>
