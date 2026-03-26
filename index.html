@@ -2461,57 +2461,67 @@ let timerElapsed = 0;
 // ============================================================
 
 async function initApp() {
-  // Load from localStorage first (instant display)
+  // Step 1: Load from localStorage and display instantly
   allData = loadAllDataFromLocal();
   goals = loadGoalsFromLocal();
-
-  // Then load from Firestore and merge
-  const firestoreDays = await loadAllDaysFromFirestore();
-  if (firestoreDays) {
-    // Merge: Firestore data takes priority, but keep local-only days
-    Object.keys(firestoreDays).forEach(dateKey => {
-      allData.days[dateKey] = firestoreDays[dateKey];
-    });
-    // Save merged data back to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
-  } else {
-    // Firestore empty or offline: upload local data to Firestore
-    for (const dateKey of Object.keys(allData.days)) {
-      await saveDayToFirestore(dateKey, allData.days[dateKey]);
-    }
-  }
-
-  const firestoreGoals = await loadGoalsFromFirestore();
-  if (firestoreGoals) {
-    goals = firestoreGoals;
-    localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
-  } else if (goals.study || goals.dev) {
-    await saveGoalsToFirestore(goals);
-  }
-
-  // Load profile
   const localProfile = localStorage.getItem('daily-task-tracker-profile');
   if (localProfile) userProfile = JSON.parse(localProfile);
-  const firestoreProfile = await loadProfileFromFirestore();
-  if (firestoreProfile) {
-    userProfile = firestoreProfile;
-    localStorage.setItem('daily-task-tracker-profile', JSON.stringify(userProfile));
-    // Load language preference from profile
-    if (firestoreProfile.lang) {
-      currentLang = firestoreProfile.lang;
-      localStorage.setItem('daily-task-tracker-lang', currentLang);
-    }
-  } else if (userProfile.displayName) {
-    await saveProfileToFirestore(userProfile);
-  }
+  if (userProfile.lang) currentLang = userProfile.lang;
+
   updateLangToggleButtons();
   document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'en';
   updateStaticText();
   updateTitle();
-
   data = getDayData(viewingDate);
   render();
   renderTimer();
+
+  // Step 2: Sync with Firestore in background
+  syncWithFirestore();
+}
+
+async function syncWithFirestore() {
+  try {
+    const firestoreDays = await loadAllDaysFromFirestore();
+    if (firestoreDays) {
+      Object.keys(firestoreDays).forEach(dateKey => {
+        allData.days[dateKey] = firestoreDays[dateKey];
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(allData));
+    } else {
+      for (const dateKey of Object.keys(allData.days)) {
+        await saveDayToFirestore(dateKey, allData.days[dateKey]);
+      }
+    }
+
+    const firestoreGoals = await loadGoalsFromFirestore();
+    if (firestoreGoals) {
+      goals = firestoreGoals;
+      localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+    } else if (goals.study || goals.dev) {
+      await saveGoalsToFirestore(goals);
+    }
+
+    const firestoreProfile = await loadProfileFromFirestore();
+    if (firestoreProfile) {
+      userProfile = firestoreProfile;
+      localStorage.setItem('daily-task-tracker-profile', JSON.stringify(userProfile));
+      if (firestoreProfile.lang) {
+        currentLang = firestoreProfile.lang;
+        localStorage.setItem('daily-task-tracker-lang', currentLang);
+        updateLangToggleButtons();
+      }
+      updateTitle();
+    } else if (userProfile.displayName) {
+      await saveProfileToFirestore(userProfile);
+    }
+
+    // Re-render with synced data
+    data = getDayData(viewingDate);
+    render();
+  } catch (err) {
+    console.error('Background sync error:', err);
+  }
 }
 
 // ============================================================
