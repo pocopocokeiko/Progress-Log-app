@@ -1242,7 +1242,7 @@ input:focus, select:focus {
 <div id="appContent" class="container" style="display:none;">
 
   <div class="logout-bar">
-    <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">English</button>
+    <button class="lang-toggle" id="langToggle" onclick="toggleLanguage()">日本語</button>
     <span class="sync-indicator" id="syncIndicator"></span>
     <span class="user-email" id="userEmail"></span>
     <button class="btn-mypage" onclick="openMyPage()">マイページ</button>
@@ -1737,7 +1737,7 @@ function toggleLanguage() {
 }
 
 function updateLangToggleButtons() {
-  const label = currentLang === 'ja' ? 'English' : '日本語';
+  const label = currentLang === 'ja' ? '日本語' : 'English';
   const btn1 = document.getElementById('langToggle');
   const btn2 = document.getElementById('langToggleLogin');
   if (btn1) btn1.textContent = label;
