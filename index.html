@@ -1875,6 +1875,11 @@ function logout() {
   });
 }
 
+// Handle redirect result (for iOS standalone mode)
+auth.getRedirectResult().catch(err => {
+  console.error('Redirect result error:', err);
+});
+
 auth.onAuthStateChanged(user => {
   currentUser = user;
   if (user) {
