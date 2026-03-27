@@ -1249,8 +1249,10 @@ input:focus, select:focus {
   justify-content: center;
 }
 
-.timer-idle select {
+.timer-idle select,
+.timer-idle .custom-select-trigger {
   padding: 14px 12px;
+  padding-right: 32px;
   font-size: 1rem;
 }
 
@@ -1343,6 +1345,114 @@ input:focus, select:focus {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+
+/* Custom Select Dropdown */
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  padding: 10px 12px;
+  padding-right: 32px;
+  border: 1.5px solid #c0c0c8;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4a4a4a;
+  background: #fff;
+  cursor: pointer;
+  transition: border 0.2s;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.custom-select-trigger::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #999;
+  transition: transform 0.2s ease;
+}
+
+.custom-select.open .custom-select-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.custom-select-trigger:hover {
+  border-color: #b8b0d4;
+}
+
+.custom-select-trigger.placeholder {
+  color: #999;
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.custom-select-options.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.custom-select-option {
+  padding: 10px 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #4a4a4a;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.15s;
+}
+
+.custom-select-option:last-child {
+  border-bottom: none;
+}
+
+.custom-select-option:hover {
+  background: #f8f6ff;
+}
+
+.custom-select-option.selected {
+  background: #f0eeff;
+}
+
+.custom-select-option:first-child {
+  color: #999;
+}
+
+/* Mobile touch optimization */
+@media (max-width: 600px) {
+  .custom-select-option {
+    padding: 14px 14px;
+  }
 }
 </style>
 </head>
@@ -1442,7 +1552,7 @@ input:focus, select:focus {
     <div class="form-row">
       <div>
         <label>プロジェクト</label>
-        <select id="taskProject"></select>
+        <div id="taskProjectContainer"></div>
       </div>
       <div>
         <label>タスク内容</label>
@@ -2716,15 +2826,11 @@ function renderTimer() {
   const container = document.getElementById('timerContent');
   if (timerState === 'idle') {
     let html = '<div class="timer-idle">';
-    html += `<div class="field"><label>${t('labelSelectProject')}</label><select id="timerProject">`;
-    html += `<option value="">${t('selectDefault')}</option>`;
-    data.projects.forEach(p => {
-      html += `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`;
-    });
-    html += '</select></div>';
+    html += `<div class="field"><label>${t('labelSelectProject')}</label><div id="timerProjectContainer"></div></div>`;
     html += `<button class="btn-start" onclick="startTimer()">${t('btnStart')}</button>`;
     html += '</div>';
     container.innerHTML = html;
+    createCustomSelect('timerProjectContainer', data.projects, t('selectDefault'));
   } else if (timerState === 'running') {
     let html = '<div class="timer-running">';
     html += `<div class="timer-project-name">${escapeHtml(timerProject)}${t('timerWorking')}</div>`;
@@ -2753,8 +2859,7 @@ function formatElapsed(seconds) {
 }
 
 function startTimer() {
-  const select = document.getElementById('timerProject');
-  const project = select.value;
+  const project = getCustomSelectValue('timerProjectContainer');
   if (!project) { alert(t('alertSelectProject')); return; }
   timerProject = project;
   timerStart = Date.now();
@@ -2836,7 +2941,7 @@ function addProject() {
 
 function addTask() {
   if (!isToday()) return;
-  const project = document.getElementById('taskProject').value;
+  const project = getCustomSelectValue('taskProjectContainer');
   const name = document.getElementById('taskName').value.trim();
   const hoursVal = document.getElementById('taskHours').value;
   const minutesVal = document.getElementById('taskMinutes').value;
@@ -3197,16 +3302,11 @@ function render() {
 
   // Project select (only if today)
   if (isToday()) {
-    const select = document.getElementById('taskProject');
-    const currentVal = select.value;
-    select.innerHTML = `<option value="">${t('selectDefault')}</option>`;
-    data.projects.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      select.appendChild(opt);
-    });
-    if (currentVal && data.projects.includes(currentVal)) select.value = currentVal;
+    const container = document.getElementById('taskProjectContainer');
+    const currentVal = getCustomSelectValue('taskProjectContainer');
+    const preserveVal = (currentVal && data.projects.includes(currentVal)) ? currentVal : '';
+    container.dataset.value = preserveVal;
+    createCustomSelect('taskProjectContainer', data.projects, t('selectDefault'));
   }
 
   // Summary
@@ -3499,6 +3599,116 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+// ============================================================
+// Custom Select Dropdown
+// ============================================================
+
+function createCustomSelect(containerId, options, placeholder, onChange) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const currentValue = container.dataset.value || '';
+
+  let html = '<div class="custom-select" id="' + containerId + '_select">';
+  const isPlaceholder = !currentValue;
+  const displayText = currentValue || placeholder;
+  html += '<div class="custom-select-trigger' + (isPlaceholder ? ' placeholder' : '') + '">' + escapeHtml(displayText) + '</div>';
+  html += '<div class="custom-select-options">';
+  html += '<div class="custom-select-option" data-value="">' + escapeHtml(placeholder) + '</div>';
+  options.forEach(function(opt) {
+    const sel = opt === currentValue ? ' selected' : '';
+    html += '<div class="custom-select-option' + sel + '" data-value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</div>';
+  });
+  html += '</div></div>';
+
+  container.innerHTML = html;
+
+  const selectEl = document.getElementById(containerId + '_select');
+  const trigger = selectEl.querySelector('.custom-select-trigger');
+  const optionsEl = selectEl.querySelector('.custom-select-options');
+
+  trigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    // Close all other open custom selects
+    document.querySelectorAll('.custom-select.open').forEach(function(el) {
+      if (el !== selectEl) {
+        el.classList.remove('open');
+        el.querySelector('.custom-select-options').classList.remove('open');
+      }
+    });
+    selectEl.classList.toggle('open');
+    optionsEl.classList.toggle('open');
+  });
+
+  optionsEl.querySelectorAll('.custom-select-option').forEach(function(optionEl) {
+    optionEl.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const value = this.dataset.value;
+      container.dataset.value = value;
+      trigger.textContent = value || placeholder;
+      if (value) {
+        trigger.classList.remove('placeholder');
+      } else {
+        trigger.classList.add('placeholder');
+      }
+      // Update selected state
+      optionsEl.querySelectorAll('.custom-select-option').forEach(function(o) { o.classList.remove('selected'); });
+      this.classList.add('selected');
+      // Close dropdown
+      selectEl.classList.remove('open');
+      optionsEl.classList.remove('open');
+      if (onChange) onChange(value);
+    });
+  });
+}
+
+function setCustomSelectValue(containerId, value) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.dataset.value = value;
+  const trigger = container.querySelector('.custom-select-trigger');
+  if (trigger) {
+    const placeholder = container.querySelector('.custom-select-option:first-child');
+    trigger.textContent = value || (placeholder ? placeholder.textContent : '');
+    if (value) {
+      trigger.classList.remove('placeholder');
+    } else {
+      trigger.classList.add('placeholder');
+    }
+  }
+  // Update selected class
+  const options = container.querySelectorAll('.custom-select-option');
+  options.forEach(function(o) {
+    o.classList.toggle('selected', o.dataset.value === value);
+  });
+}
+
+function getCustomSelectValue(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return '';
+  return container.dataset.value || '';
+}
+
+// Close all custom selects when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.custom-select.open').forEach(function(el) {
+      el.classList.remove('open');
+      el.querySelector('.custom-select-options').classList.remove('open');
+    });
+  }
+});
+
+// Close custom selects on touch outside (mobile)
+document.addEventListener('touchstart', function(e) {
+  if (!e.target.closest('.custom-select')) {
+    document.querySelectorAll('.custom-select.open').forEach(function(el) {
+      el.classList.remove('open');
+      el.querySelector('.custom-select-options').classList.remove('open');
+    });
+  }
+}, { passive: true });
 
 // Enter key support (deferred until DOM is ready in app)
 function setupKeyListeners() {
