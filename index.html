@@ -2590,13 +2590,15 @@ function isToday() {
 
 function getDayData(dateKey) {
   if (!allData.days[dateKey]) {
-    // New day: inherit projects and colors from the most recent day
-    const prevProjects = getPreviousDayProjects(dateKey);
-    allData.days[dateKey] = {
-      projects: prevProjects.projects,
-      tasks: [],
-      projectColors: prevProjects.colors
-    };
+    allData.days[dateKey] = { projects: [], tasks: [], projectColors: {} };
+  }
+  // Inherit projects from previous day if current day has no projects
+  if (!allData.days[dateKey].projects || allData.days[dateKey].projects.length === 0) {
+    const prev = getPreviousDayProjects(dateKey);
+    if (prev.projects.length > 0) {
+      allData.days[dateKey].projects = prev.projects;
+      allData.days[dateKey].projectColors = prev.colors;
+    }
   }
   if (!allData.days[dateKey].projectColors) allData.days[dateKey].projectColors = {};
   return allData.days[dateKey];
