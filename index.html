@@ -1430,6 +1430,37 @@ input:focus, select:focus {
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   transition: background 0.15s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-select-option .option-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.custom-select-option .option-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.custom-select-option .option-btn:hover {
+  background: #f0f0f0;
+  color: #888;
+}
+
+.custom-select-option .option-btn.delete:hover {
+  background: #fee;
+  color: #c88;
 }
 
 .custom-select-option:last-child {
@@ -3615,10 +3646,16 @@ function createCustomSelect(containerId, options, placeholder, onChange) {
   const displayText = currentValue || placeholder;
   html += '<div class="custom-select-trigger' + (isPlaceholder ? ' placeholder' : '') + '">' + escapeHtml(displayText) + '</div>';
   html += '<div class="custom-select-options">';
-  html += '<div class="custom-select-option" data-value="">' + escapeHtml(placeholder) + '</div>';
+  html += '<div class="custom-select-option" data-value=""><span>' + escapeHtml(placeholder) + '</span></div>';
   options.forEach(function(opt) {
     const sel = opt === currentValue ? ' selected' : '';
-    html += '<div class="custom-select-option' + sel + '" data-value="' + escapeHtml(opt) + '">' + escapeHtml(opt) + '</div>';
+    html += '<div class="custom-select-option' + sel + '" data-value="' + escapeHtml(opt) + '">';
+    html += '<span>' + escapeHtml(opt) + '</span>';
+    html += '<span class="option-actions">';
+    html += '<button class="option-btn edit" data-project="' + escapeHtml(opt) + '" title="編集">✎</button>';
+    html += '<button class="option-btn delete" data-project="' + escapeHtml(opt) + '" title="削除">×</button>';
+    html += '</span>';
+    html += '</div>';
   });
   html += '</div></div>';
 
@@ -3661,6 +3698,58 @@ function createCustomSelect(containerId, options, placeholder, onChange) {
       if (onChange) onChange(value);
     });
   });
+
+  // Edit buttons
+  optionsEl.querySelectorAll('.option-btn.edit').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectEl.classList.remove('open');
+      optionsEl.classList.remove('open');
+      const oldName = this.dataset.project;
+      const newName = prompt(currentLang === 'ja' ? 'プロジェクト名を変更:' : 'Rename project:', oldName);
+      if (newName && newName.trim() && newName.trim() !== oldName) {
+        renameProjectFromSelect(oldName, newName.trim());
+      }
+    });
+  });
+
+  // Delete buttons
+  optionsEl.querySelectorAll('.option-btn.delete').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      selectEl.classList.remove('open');
+      optionsEl.classList.remove('open');
+      const name = this.dataset.project;
+      const msg = currentLang === 'ja' ? '「' + name + '」を削除しますか？\nこのプロジェクトのタスクも削除されます。' : 'Delete "' + name + '"?\nAll tasks in this project will also be deleted.';
+      if (confirm(msg)) {
+        deleteProjectFromSelect(name);
+      }
+    });
+  });
+}
+
+function renameProjectFromSelect(oldName, newName) {
+  if (data.projects.includes(newName)) {
+    alert(currentLang === 'ja' ? 'このプロジェクト名は既に存在します。' : 'This project name already exists.');
+    return;
+  }
+  const idx = data.projects.indexOf(oldName);
+  if (idx !== -1) data.projects[idx] = newName;
+  data.tasks.forEach(t => { if (t.project === oldName) t.project = newName; });
+  if (data.projectColors && data.projectColors[oldName]) {
+    data.projectColors[newName] = data.projectColors[oldName];
+    delete data.projectColors[oldName];
+  }
+  saveData();
+  render();
+}
+
+function deleteProjectFromSelect(name) {
+  data.projects = data.projects.filter(p => p !== name);
+  data.tasks = data.tasks.filter(t => t.project !== name);
+  if (data.projectColors) delete data.projectColors[name];
+  saveData();
+  render();
 }
 
 function setCustomSelectValue(containerId, value) {
