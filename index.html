@@ -2956,7 +2956,6 @@ function formatTime(minutes) {
 }
 
 function addProject() {
-  if (!isToday()) return;
   const input = document.getElementById('newProject');
   const name = input.value.trim();
   if (!name) return;
@@ -2971,7 +2970,6 @@ function addProject() {
 }
 
 function addTask() {
-  if (!isToday()) return;
   const project = getCustomSelectValue('taskProjectContainer');
   const name = document.getElementById('taskName').value.trim();
   const hoursVal = document.getElementById('taskHours').value;
@@ -2994,7 +2992,6 @@ function addTask() {
 }
 
 function deleteTask(id) {
-  if (!isToday()) return;
   data.tasks = data.tasks.filter(t => t.id !== id);
   saveData();
   render();
@@ -3320,25 +3317,22 @@ function render() {
   document.getElementById('nextDay').disabled = isToday();
   document.getElementById('todayBtn').style.display = isToday() ? 'none' : 'inline-block';
 
-  // Readonly banner and input area
+  // Banner for past dates
   const banner = document.getElementById('readonlyBanner');
   const inputArea = document.getElementById('inputArea');
   if (!isToday()) {
-    banner.innerHTML = `<div class="readonly-banner">${t('readonlyBanner')}</div>`;
-    inputArea.style.display = 'none';
+    banner.innerHTML = `<div class="readonly-banner" style="background:#f0f4fe;border-color:#d0ddfe;">${currentLang === 'ja' ? '過去の記録を編集中' : 'Editing past records'}</div>`;
   } else {
     banner.innerHTML = '';
-    inputArea.style.display = 'block';
   }
+  inputArea.style.display = 'block';
 
-  // Project select (only if today)
-  if (isToday()) {
-    const container = document.getElementById('taskProjectContainer');
-    const currentVal = getCustomSelectValue('taskProjectContainer');
-    const preserveVal = (currentVal && data.projects.includes(currentVal)) ? currentVal : '';
-    container.dataset.value = preserveVal;
-    createCustomSelect('taskProjectContainer', data.projects, t('selectDefault'));
-  }
+  // Project select
+  const container = document.getElementById('taskProjectContainer');
+  const currentVal = getCustomSelectValue('taskProjectContainer');
+  const preserveVal = (currentVal && data.projects.includes(currentVal)) ? currentVal : '';
+  container.dataset.value = preserveVal;
+  createCustomSelect('taskProjectContainer', data.projects, t('selectDefault'));
 
   // Summary
   const totalMinutes = data.tasks.reduce((s, t) => s + t.time, 0);
@@ -3375,25 +3369,16 @@ function render() {
       const projectTotal = tasks.reduce((s, t) => s + t.time, 0);
 
       html += `<div class="project-group">`;
-      if (isToday()) {
-        html += `<div class="project-header" style="background:${color}" onclick="openColorPicker('${escapeHtml(project)}')" title="${t('colorClickHint')}">`;
-      } else {
-        html += `<div class="project-header" style="background:${color};cursor:default;">`;
-      }
+      html += `<div class="project-header" style="background:${color}" onclick="openColorPicker('${escapeHtml(project)}')" title="${t('colorClickHint')}">`;
       html += `<span>${project}</span>`;
       html += `<span class="project-time">${formatTime(projectTotal)} / ${tasks.length}${t('taskCount')}</span>`;
       html += `</div>`;
       html += `<div class="task-list">`;
       tasks.forEach(t => {
         html += `<div class="task-item">`;
-        if (isToday()) {
-          html += `<span class="task-name editable" onclick="editTaskName(${t.id})" title="${TRANSLATIONS[currentLang].editClickHint}">${escapeHtml(t.name)}</span>`;
-          html += `<span class="task-time editable" onclick="editTaskTime(${t.id})" title="${TRANSLATIONS[currentLang].editClickHint}">${formatTime(t.time)}</span>`;
-          html += `<button class="btn-delete" onclick="deleteTask(${t.id})">×</button>`;
-        } else {
-          html += `<span class="task-name">${escapeHtml(t.name)}</span>`;
-          html += `<span class="task-time">${formatTime(t.time)}</span>`;
-        }
+        html += `<span class="task-name editable" onclick="editTaskName(${t.id})" title="${TRANSLATIONS[currentLang].editClickHint}">${escapeHtml(t.name)}</span>`;
+        html += `<span class="task-time editable" onclick="editTaskTime(${t.id})" title="${TRANSLATIONS[currentLang].editClickHint}">${formatTime(t.time)}</span>`;
+        html += `<button class="btn-delete" onclick="deleteTask(${t.id})">×</button>`;
         html += `</div>`;
       });
       html += `</div></div>`;
@@ -3497,7 +3482,6 @@ function renderGoalBar(type, currentMinutes) {
 }
 
 function editTaskName(id) {
-  if (!isToday()) return;
   const task = data.tasks.find(t => t.id === id);
   if (!task) return;
   const span = event.target;
@@ -3524,7 +3508,6 @@ function editTaskName(id) {
 }
 
 function editTaskTime(id) {
-  if (!isToday()) return;
   const task = data.tasks.find(t => t.id === id);
   if (!task) return;
   const span = event.target;
@@ -3560,7 +3543,6 @@ const PALETTE = [
 let currentEditProject = '';
 
 function openColorPicker(project) {
-  if (!isToday()) return;
   if (!data.projectColors) data.projectColors = {};
   currentEditProject = project;
   const current = getProjectColor(project);
