@@ -508,6 +508,23 @@ h1 {
   color: #5a5a5a;
 }
 
+.btn-goal {
+  padding: 5px 14px;
+  background: #c48888;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.btn-goal:hover {
+  background: #b07070;
+}
+
 .summary-hint {
   font-size: 0.65rem;
   color: #bbb;
@@ -1557,22 +1574,24 @@ input:focus, select:focus {
       <div class="summary-label">合計時間（勉強以外）</div>
       <div class="summary-value" id="totalTime">0h</div>
     </div>
-    <div class="summary-card clickable" onclick="openGoalModal('dev')">
+    <div class="summary-card">
       <div class="summary-label">本日の個人開発時間</div>
       <div class="summary-value" id="devTime">0分</div>
       <div class="goal-bar-container" id="devGoalBar" style="display:none;">
         <div class="goal-label" id="devGoalLabel"></div>
         <div class="goal-bar-bg"><div class="goal-bar-fill dev" id="devGoalFill"></div></div>
       </div>
+      <button class="btn-goal" onclick="openGoalModal('dev')" id="devGoalBtn">目標を設定する</button>
       <div class="summary-hint" id="devHint">※プロジェクト名に「開発」ワードが入っていると加算されます</div>
     </div>
-    <div class="summary-card clickable" onclick="openGoalModal('study')">
+    <div class="summary-card">
       <div class="summary-label">本日の勉強時間</div>
       <div class="summary-value" id="studyTime">0分</div>
       <div class="goal-bar-container" id="studyGoalBar" style="display:none;">
         <div class="goal-label" id="studyGoalLabel"></div>
         <div class="goal-bar-bg"><div class="goal-bar-fill study" id="studyGoalFill"></div></div>
       </div>
+      <button class="btn-goal" onclick="openGoalModal('study')" id="studyGoalBtn">目標を設定する</button>
       <div class="summary-hint" id="studyHint">※プロジェクト名に「勉強」ワードが入っていると加算されます</div>
     </div>
   </div>
@@ -2138,6 +2157,12 @@ function updateStaticText() {
     summaryLabels[1].textContent = t('summaryDevLabel');
     summaryLabels[2].textContent = t('summaryStudyLabel');
   }
+
+  // Goal buttons
+  const devGoalBtn = document.getElementById('devGoalBtn');
+  if (devGoalBtn) devGoalBtn.textContent = currentLang === 'ja' ? '目標を設定する' : 'Set Goal';
+  const studyGoalBtn = document.getElementById('studyGoalBtn');
+  if (studyGoalBtn) studyGoalBtn.textContent = currentLang === 'ja' ? '目標を設定する' : 'Set Goal';
 
   // Summary hints
   const devHint = document.getElementById('devHint');
