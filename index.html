@@ -1564,7 +1564,7 @@ input:focus, select:focus {
         <div class="goal-label" id="devGoalLabel"></div>
         <div class="goal-bar-bg"><div class="goal-bar-fill dev" id="devGoalFill"></div></div>
       </div>
-      <div class="summary-hint" id="devHint">※プロジェクト名に「開発」と入れると加算されます</div>
+      <div class="summary-hint" id="devHint">※プロジェクト名に「開発」ワードが入っていると加算されます</div>
     </div>
     <div class="summary-card clickable" onclick="openGoalModal('study')">
       <div class="summary-label">本日の勉強時間</div>
@@ -1573,7 +1573,7 @@ input:focus, select:focus {
         <div class="goal-label" id="studyGoalLabel"></div>
         <div class="goal-bar-bg"><div class="goal-bar-fill study" id="studyGoalFill"></div></div>
       </div>
-      <div class="summary-hint" id="studyHint">※プロジェクト名に「勉強」と入れると加算されます</div>
+      <div class="summary-hint" id="studyHint">※プロジェクト名に「勉強」ワードが入っていると加算されます</div>
     </div>
   </div>
 
@@ -2141,9 +2141,9 @@ function updateStaticText() {
 
   // Summary hints
   const devHint = document.getElementById('devHint');
-  if (devHint) devHint.textContent = currentLang === 'ja' ? '※プロジェクト名に「開発」と入れると加算されます' : '* Add "開発" to project name to count here';
+  if (devHint) devHint.textContent = currentLang === 'ja' ? '※プロジェクト名に「開発」ワードが入っていると加算されます' : '* Counted when project name contains "開発"';
   const studyHint = document.getElementById('studyHint');
-  if (studyHint) studyHint.textContent = currentLang === 'ja' ? '※プロジェクト名に「勉強」と入れると加算されます' : '* Add "勉強" to project name to count here';
+  if (studyHint) studyHint.textContent = currentLang === 'ja' ? '※プロジェクト名に「勉強」ワードが入っていると加算されます' : '* Counted when project name contains "勉強"';
 
   // Input section headers
   const inputH2s = document.querySelectorAll('.input-section h2');
