@@ -625,10 +625,10 @@ h1 {
 
 /* Input Form */
 .input-section {
-  background: #fafaff;
+  background: #f4f8fb;
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid #ececf5;
+  border: 1px solid #dce8f0;
   flex: 1;
 }
 
@@ -755,7 +755,7 @@ input:focus, select:focus {
   align-items: center;
   padding: 10px 14px;
   background: #fff;
-  border-bottom: 1px solid #f5f5fa;
+  border-bottom: 1px solid #eef3f8;
   transition: background 0.15s;
   flex-wrap: wrap;
 }
@@ -765,7 +765,7 @@ input:focus, select:focus {
 }
 
 .task-item:hover {
-  background: #fafaff;
+  background: #f4f8fb;
 }
 
 .task-name {
@@ -884,10 +884,10 @@ input:focus, select:focus {
 }
 
 .weekly-report-container {
-  background: #fafaff;
+  background: #f4f8fb;
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid #ececf5;
+  border: 1px solid #dce8f0;
 }
 
 .weekly-bar-row {
@@ -907,7 +907,7 @@ input:focus, select:focus {
 
 .weekly-bar-bg {
   flex: 1;
-  background: #ececf5;
+  background: #dce8f0;
   border-radius: 6px;
   height: 20px;
   overflow: hidden;
@@ -938,7 +938,7 @@ input:focus, select:focus {
   gap: 24px;
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid #ececf5;
+  border-top: 1px solid #dce8f0;
 }
 
 .weekly-summary-item {
@@ -973,7 +973,7 @@ input:focus, select:focus {
   background: #f8f8fd;
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid #ececf5;
+  border: 1px solid #dce8f0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1247,10 +1247,10 @@ input:focus, select:focus {
 
 /* Timer */
 .timer-section {
-  background: #fafaff;
+  background: #f4f8fb;
   border-radius: 16px;
   padding: 24px;
-  border: 1px solid #ececf5;
+  border: 1px solid #dce8f0;
   width: 380px;
   flex-shrink: 0;
   display: flex;
@@ -1491,11 +1491,11 @@ input:focus, select:focus {
 }
 
 .custom-select-option:hover {
-  background: #f8f6ff;
+  background: #eef4f9;
 }
 
 .custom-select-option.selected {
-  background: #f0eeff;
+  background: #e4eff6;
 }
 
 .custom-select-option:first-child {
@@ -3354,7 +3354,7 @@ function renderWeeklyReport() {
   const sortedProjects = Object.entries(projectWeekTotals).sort((a, b) => b[1] - a[1]);
   if (sortedProjects.length > 0) {
     const maxProjectMin = sortedProjects[0][1];
-    html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #ececf5;">`;
+    html += `<div style="margin-top:16px;padding-top:14px;border-top:1px solid #dce8f0;">`;
     html += `<div style="font-size:0.8rem;color:#999;margin-bottom:10px;">${currentLang === 'ja' ? 'プロジェクト別' : 'By Project'}</div>`;
     sortedProjects.forEach(([project, minutes]) => {
       const pct = maxProjectMin > 0 ? (minutes / maxProjectMin * 100) : 0;
