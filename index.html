@@ -624,6 +624,40 @@ h1 {
 }
 
 /* Input Form */
+.daily-memo-section {
+  background: #f4f8fb;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #dce8f0;
+}
+
+.daily-memo-section h2 {
+  font-size: 1rem;
+  color: #8EA9C4;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.daily-memo-container textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  border: 1.5px solid #c0c0c8;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #4a4a4a;
+  background: #fff;
+  outline: none;
+  resize: vertical;
+  transition: border 0.2s;
+}
+
+.daily-memo-container textarea:focus {
+  border-color: #8EA9C4;
+}
+
 .input-section {
   background: #f4f8fb;
   border-radius: 16px;
@@ -1635,6 +1669,13 @@ input:focus, select:focus {
   </div>
   </div>
 
+  <div class="daily-memo-section">
+    <h2 id="memoTitle">振り返りメモ</h2>
+    <div class="daily-memo-container">
+      <textarea id="dailyMemo" placeholder="今日の振り返りを書いてみよう..." oninput="saveMemo()"></textarea>
+    </div>
+  </div>
+
   <div class="main-content">
     <div>
       <div id="taskDisplay"></div>
@@ -2163,6 +2204,12 @@ function updateStaticText() {
   if (devGoalBtn) devGoalBtn.textContent = currentLang === 'ja' ? '目標を設定する' : 'Set Goal';
   const studyGoalBtn = document.getElementById('studyGoalBtn');
   if (studyGoalBtn) studyGoalBtn.textContent = currentLang === 'ja' ? '目標を設定する' : 'Set Goal';
+
+  // Memo title
+  const memoTitle = document.getElementById('memoTitle');
+  if (memoTitle) memoTitle.textContent = currentLang === 'ja' ? '振り返りメモ' : 'Daily Reflection';
+  const memoTextarea = document.getElementById('dailyMemo');
+  if (memoTextarea) memoTextarea.placeholder = currentLang === 'ja' ? '今日の振り返りを書いてみよう...' : 'Write your daily reflection...';
 
   // Summary hints
   const devHint = document.getElementById('devHint');
@@ -2808,6 +2855,17 @@ function saveData() {
   saveDayToFirestore(viewingDate, data);
 }
 
+function saveMemo() {
+  const memo = document.getElementById('dailyMemo').value;
+  data.memo = memo;
+  saveData();
+}
+
+function loadMemo() {
+  const memoEl = document.getElementById('dailyMemo');
+  if (memoEl) memoEl.value = data.memo || '';
+}
+
 function saveGoals() {
   localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
   saveGoalsToFirestore(goals);
@@ -3417,6 +3475,9 @@ function render() {
   // Goal progress bars
   renderGoalBar('study', studyMinutes);
   renderGoalBar('dev', devMinutes);
+
+  // Load memo
+  loadMemo();
 
   // Task display grouped by project
   const display = document.getElementById('taskDisplay');
