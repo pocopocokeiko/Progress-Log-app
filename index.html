@@ -659,7 +659,7 @@ h1 {
 }
 
 .daily-memo-container textarea:disabled {
-  background: #f4f8fb;
+  background: #ffffff;
   color: #5a5a5a;
   cursor: default;
 }
@@ -2912,6 +2912,7 @@ function saveData() {
 function saveMemoAndLock() {
   const memo = document.getElementById('dailyMemo').value;
   data.memo = memo;
+  data.memoSaved = true;
   saveData();
   // Lock textarea
   document.getElementById('dailyMemo').disabled = true;
@@ -2928,20 +2929,24 @@ function enableMemoEdit() {
   document.getElementById('dailyMemo').focus();
   document.getElementById('memoSaveBtn').style.display = 'inline-block';
   document.getElementById('memoEditBtn').style.display = 'none';
+  data.memoSaved = false;
+  saveData();
 }
 
 function loadMemo() {
   const memoEl = document.getElementById('dailyMemo');
-  if (!memoEl) return;
+  const saveBtn = document.getElementById('memoSaveBtn');
+  const editBtn = document.getElementById('memoEditBtn');
+  if (!memoEl || !saveBtn || !editBtn) return;
   memoEl.value = data.memo || '';
-  if (data.memo) {
+  if (data.memo && data.memoSaved) {
     memoEl.disabled = true;
-    document.getElementById('memoSaveBtn').style.display = 'none';
-    document.getElementById('memoEditBtn').style.display = 'inline-block';
+    saveBtn.style.display = 'none';
+    editBtn.style.display = 'inline-block';
   } else {
     memoEl.disabled = false;
-    document.getElementById('memoSaveBtn').style.display = 'inline-block';
-    document.getElementById('memoEditBtn').style.display = 'none';
+    saveBtn.style.display = 'inline-block';
+    editBtn.style.display = 'none';
   }
 }
 
