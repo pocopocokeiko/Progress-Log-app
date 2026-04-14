@@ -1800,6 +1800,7 @@ input:focus, select:focus {
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js"></script>
 
 <script>
 // ============================================================
@@ -1817,6 +1818,11 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
+// App Check - only allow requests from authorized apps
+const appCheck = firebase.appCheck();
+appCheck.activate('6LeERLcsAAAAAJJ5ZMpUrtsm8X-loAF6-q7i1SFr', true);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
